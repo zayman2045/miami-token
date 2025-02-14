@@ -24,6 +24,7 @@ pub mod miami_token {
     pub fn airdrop_tokens(ctx: Context<AirdropTokens>, amount: u64) -> Result<()> {
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint", &[ctx.bumps.token_mint]]];
 
+        // Accounts required to make the mint_to CPI call
         let cpi_accounts = MintTo {
             mint: ctx.accounts.token_mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -50,7 +51,7 @@ pub struct CreateMintAccount<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(
-      init,
+      init_if_needed,
       payer = signer,
       mint::authority = token_mint,
       mint::decimals = 9,
