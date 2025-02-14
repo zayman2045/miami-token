@@ -7,7 +7,7 @@ use anchor_spl::{
     token_interface::{Mint, TokenAccount, TokenInterface},
 };
 
-declare_id!("coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF");
+declare_id!("F6ca21MY9PkQbtam7VhbRxroHLoVX5Voukmi5ksyhES8");
 
 #[program]
 pub mod miami_token {
