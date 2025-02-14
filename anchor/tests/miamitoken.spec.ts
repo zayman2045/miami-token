@@ -1,76 +1,34 @@
-import * as anchor from '@coral-xyz/anchor'
-import {Program} from '@coral-xyz/anchor'
-import {Keypair} from '@solana/web3.js'
-import {Miamitoken} from '../target/types/miamitoken'
+import * as anchor from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
+import { Keypair } from "@solana/web3.js";
+import { MiamiToken } from "../target/types/miami_token";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
-describe('miamitoken', () => {
+describe("Miami Token", () => {
   // Configure the client to use the local cluster.
-  const provider = anchor.AnchorProvider.env()
-  anchor.setProvider(provider)
-  const payer = provider.wallet as anchor.Wallet
+  const provider = anchor.AnchorProvider.env();
+  anchor.setProvider(provider);
+  const payer = provider.wallet as anchor.Wallet;
 
-  const program = anchor.workspace.Miamitoken as Program<Miamitoken>
+  const program = anchor.workspace.MiamiToken as Program<MiamiToken>;
 
-  const miamitokenKeypair = Keypair.generate()
+  // const miamiTokenKMint = Keypair.generate();
+  const [miamiTokenKMint] = anchor.web3.PublicKey.findProgramAddressSync(
+    [Buffer.from("mint")],
+    program.programId
+  );
 
-  it('Initialize Miamitoken', async () => {
-    await program.methods
-      .initialize()
+  console.log("Miami token mint: ", miamiTokenKMint.toBase58());
+
+  it("Initialize Miami Token", async () => {
+    const tx = await program.methods
+      .createTokenMint()
       .accounts({
-        miamitoken: miamitokenKeypair.publicKey,
-        payer: payer.publicKey,
+        signer: payer.publicKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .signers([miamitokenKeypair])
-      .rpc()
+      .rpc({ skipPreflight: true, commitment: "confirmed" });
 
-    const currentCount = await program.account.miamitoken.fetch(miamitokenKeypair.publicKey)
-
-    expect(currentCount.count).toEqual(0)
-  })
-
-  it('Increment Miamitoken', async () => {
-    await program.methods.increment().accounts({ miamitoken: miamitokenKeypair.publicKey }).rpc()
-
-    const currentCount = await program.account.miamitoken.fetch(miamitokenKeypair.publicKey)
-
-    expect(currentCount.count).toEqual(1)
-  })
-
-  it('Increment Miamitoken Again', async () => {
-    await program.methods.increment().accounts({ miamitoken: miamitokenKeypair.publicKey }).rpc()
-
-    const currentCount = await program.account.miamitoken.fetch(miamitokenKeypair.publicKey)
-
-    expect(currentCount.count).toEqual(2)
-  })
-
-  it('Decrement Miamitoken', async () => {
-    await program.methods.decrement().accounts({ miamitoken: miamitokenKeypair.publicKey }).rpc()
-
-    const currentCount = await program.account.miamitoken.fetch(miamitokenKeypair.publicKey)
-
-    expect(currentCount.count).toEqual(1)
-  })
-
-  it('Set miamitoken value', async () => {
-    await program.methods.set(42).accounts({ miamitoken: miamitokenKeypair.publicKey }).rpc()
-
-    const currentCount = await program.account.miamitoken.fetch(miamitokenKeypair.publicKey)
-
-    expect(currentCount.count).toEqual(42)
-  })
-
-  it('Set close the miamitoken account', async () => {
-    await program.methods
-      .close()
-      .accounts({
-        payer: payer.publicKey,
-        miamitoken: miamitokenKeypair.publicKey,
-      })
-      .rpc()
-
-    // The account should no longer exist, returning null.
-    const userAccount = await program.account.miamitoken.fetchNullable(miamitokenKeypair.publicKey)
-    expect(userAccount).toBeNull()
-  })
-})
+    console.log("Your transaction signature", tx);
+  });
+});
