@@ -1290,7 +1290,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "miamitoken"
+name = "miami_token"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",

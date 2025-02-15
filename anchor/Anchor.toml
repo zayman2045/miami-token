@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-miami_token = "coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF"
+miami_token = "EmSvUFba9Fuz8T4wpu9WVF2mvdPjLGWnawnND5i5DeNd"
 
 [registry]
 url = "https://api.apr.dev"

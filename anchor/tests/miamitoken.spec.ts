@@ -13,6 +13,7 @@ describe("Miami Token", () => {
 
   const program = anchor.workspace.MiamiToken as Program<MiamiToken>;
 
+  // TODO: test if either keypair will work to query
   // const miamiTokenKMint = Keypair.generate();
   const [miamiTokenKMint] = anchor.web3.PublicKey.findProgramAddressSync(
     [Buffer.from("mint")],
@@ -22,6 +23,7 @@ describe("Miami Token", () => {
   const user = Keypair.generate();
 
   it("Initialize Miami Token", async () => {
+    // Create the token mint
     const tx = await program.methods
       .createTokenMint()
       .accounts({
@@ -31,6 +33,12 @@ describe("Miami Token", () => {
       .rpc({ skipPreflight: true, commitment: "confirmed" });
 
     console.log("Token mint initialization successful: ", tx);
+  
+    // // Check the token mint balance
+    // const mintAccount = await connection.getParsedAccountInfo(
+    //   miamiTokenKMint
+    // );
+    // console.log("Mint account: ", mintAccount);
   });
 
   it("Airdrop tokens to user", async () => {

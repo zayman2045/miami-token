@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/miami_token.json`.
  */
 export type MiamiToken = {
-  "address": "F6ca21MY9PkQbtam7VhbRxroHLoVX5Voukmi5ksyhES8",
+  "address": "EmSvUFba9Fuz8T4wpu9WVF2mvdPjLGWnawnND5i5DeNd",
   "metadata": {
     "name": "miamiToken",
     "version": "0.1.0",

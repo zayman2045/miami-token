@@ -1,6 +1,7 @@
+// This file is used to interact with the miami token program on Solana
 'use client'
 
-import { getMiamitokenProgram, getMiamitokenProgramId } from '@project/anchor'
+import { getMiamiTokenProgram, getMiamiTokenProgramId } from '@project/anchor'
 import { useConnection } from '@solana/wallet-adapter-react'
 import { Cluster, Keypair, PublicKey } from '@solana/web3.js'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -15,14 +16,16 @@ export function useMiamitokenProgram() {
   const { cluster } = useCluster()
   const transactionToast = useTransactionToast()
   const provider = useAnchorProvider()
-  const programId = useMemo(() => getMiamitokenProgramId(cluster.network as Cluster), [cluster])
-  const program = useMemo(() => getMiamitokenProgram(provider, programId), [provider, programId])
+  const programId = useMemo(() => getMiamiTokenProgramId(cluster.network as Cluster), [cluster])
+  const program = useMemo(() => getMiamiTokenProgram(provider, programId), [provider, programId])
 
+  // Fetch all accounts
   const accounts = useQuery({
-    queryKey: ['miamitoken', 'all', { cluster }],
-    queryFn: () => program.account.miamitoken.all(),
+    queryKey: ['miami_token', 'all', { cluster }],
+    queryFn: () => program.account.miami_token.all(),
   })
 
+  // Fetch the program account
   const getProgramAccount = useQuery({
     queryKey: ['get-program-account', { cluster }],
     queryFn: () => connection.getParsedAccountInfo(programId),
@@ -54,8 +57,8 @@ export function useMiamitokenProgramAccount({ account }: { account: PublicKey })
   const { program, accounts } = useMiamitokenProgram()
 
   const accountQuery = useQuery({
-    queryKey: ['miamitoken', 'fetch', { cluster, account }],
-    queryFn: () => program.account.miamitoken.fetch(account),
+    queryKey: ['miami_token', 'fetch', { cluster, account }],
+    queryFn: () => program.account.miami_token.fetch(account),
   })
 
   const closeMutation = useMutation({
