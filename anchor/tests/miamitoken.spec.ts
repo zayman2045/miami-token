@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { Keypair, LAMPORTS_PER_SOL, ParsedAccountData } from "@solana/web3.js";
 import { MiamiToken } from "../target/types/miami_token";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
@@ -13,9 +13,7 @@ describe("Miami Token", () => {
 
   const program = anchor.workspace.MiamiToken as Program<MiamiToken>;
 
-  // TODO: test if either keypair will work to query
-  // const miamiTokenKMint = Keypair.generate();
-  const [miamiTokenKMint] = anchor.web3.PublicKey.findProgramAddressSync(
+  const [miamiTokenMint] = anchor.web3.PublicKey.findProgramAddressSync(
     [Buffer.from("mint")],
     program.programId
   );
@@ -34,11 +32,15 @@ describe("Miami Token", () => {
 
     console.log("Token mint initialization successful: ", tx);
   
-    // // Check the token mint balance
-    // const mintAccount = await connection.getParsedAccountInfo(
-    //   miamiTokenKMint
-    // );
-    // console.log("Mint account: ", mintAccount);
+    // Check that the token mint was created
+    const mintAccount = await connection.getParsedAccountInfo(
+      miamiTokenMint
+    );
+
+    const parsedInfo = (mintAccount.value?.data as any).parsed?.info;   
+
+    expect(parsedInfo.isInitialized).toBe(true);
+
   });
 
   it("Airdrop tokens to user", async () => {
