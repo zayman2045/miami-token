@@ -5,12 +5,12 @@ import { useMemo } from "react";
 import { ellipsify } from "../ui/ui-layout";
 import { ExplorerLink } from "../cluster/cluster-ui";
 import {
-  useMiamitokenProgram,
-  useMiamitokenProgramAccount,
+  useMiamiTokenProgram,
+  useMiamiTokenProgramAccount,
 } from "./miami-token-data-access";
 
-export function MiamitokenCreate() {
-  const { initialize } = useMiamitokenProgram();
+export function MiamiTokenCreate() {
+  const { initialize } = useMiamiTokenProgram();
 
   return (
     <button
@@ -18,13 +18,13 @@ export function MiamitokenCreate() {
       onClick={() => initialize.mutateAsync(Keypair.generate())}
       disabled={initialize.isPending}
     >
-      Create {initialize.isPending && "..."}
+      Create Token Mint {initialize.isPending && "..."}
     </button>
   );
 }
 
-export function MiamitokenList() {
-  const { accounts, getProgramAccount } = useMiamitokenProgram();
+export function MiamiTokenList() {
+  const { accounts, getProgramAccount } = useMiamiTokenProgram();
 
   if (getProgramAccount.isLoading) {
     return <span className="loading loading-spinner loading-lg"></span>;
@@ -46,7 +46,7 @@ export function MiamitokenList() {
       ) : accounts.data?.length ? (
         <div className="grid md:grid-cols-2 gap-4">
           {accounts.data?.map((account) => (
-            <MiamitokenCard
+            <MiamiTokenCard
               key={account.publicKey.toString()}
               account={account.publicKey}
             />
@@ -62,14 +62,11 @@ export function MiamitokenList() {
   );
 }
 
-function MiamitokenCard({ account }: { account: PublicKey }) {
+function MiamiTokenCard({ account }: { account: PublicKey }) {
   const {
     accountQuery,
     incrementMutation,
-    setMutation,
-    decrementMutation,
-    closeMutation,
-  } = useMiamitokenProgramAccount({
+  } = useMiamiTokenProgramAccount({
     account,
   });
 
@@ -98,33 +95,6 @@ function MiamitokenCard({ account }: { account: PublicKey }) {
             >
               Increment
             </button>
-            <button
-              className="btn btn-xs lg:btn-md btn-outline"
-              onClick={() => {
-                const value = window.prompt(
-                  "Set value to:",
-                  count.toString() ?? "0"
-                );
-                if (
-                  !value ||
-                  parseInt(value) === count ||
-                  isNaN(parseInt(value))
-                ) {
-                  return;
-                }
-                return setMutation.mutateAsync(parseInt(value));
-              }}
-              disabled={setMutation.isPending}
-            >
-              Set
-            </button>
-            <button
-              className="btn btn-xs lg:btn-md btn-outline"
-              onClick={() => decrementMutation.mutateAsync()}
-              disabled={decrementMutation.isPending}
-            >
-              Decrement
-            </button>
           </div>
           <div className="text-center space-y-4">
             <p>
@@ -133,22 +103,6 @@ function MiamitokenCard({ account }: { account: PublicKey }) {
                 label={ellipsify(account.toString())}
               />
             </p>
-            <button
-              className="btn btn-xs btn-secondary btn-outline"
-              onClick={() => {
-                if (
-                  !window.confirm(
-                    "Are you sure you want to close this account?"
-                  )
-                ) {
-                  return;
-                }
-                return closeMutation.mutateAsync();
-              }}
-              disabled={closeMutation.isPending}
-            >
-              Close
-            </button>
           </div>
         </div>
       </div>
