@@ -11,7 +11,8 @@ import { useCluster } from '../cluster/cluster-data-access'
 import { useAnchorProvider } from '../solana/solana-provider'
 import { useTransactionToast } from '../ui/ui-layout'
 
-export function useMiamitokenProgram() {
+// Hook to query and initialize the miami token program
+export function useMiamiTokenProgram() {
   const { connection } = useConnection()
   const { cluster } = useCluster()
   const transactionToast = useTransactionToast()
@@ -19,18 +20,19 @@ export function useMiamitokenProgram() {
   const programId = useMemo(() => getMiamiTokenProgramId(cluster.network as Cluster), [cluster])
   const program = useMemo(() => getMiamiTokenProgram(provider, programId), [provider, programId])
 
-  // Fetch all accounts
+  // Query to fetch all miami token program accounts
   const accounts = useQuery({
     queryKey: ['miami_token', 'all', { cluster }],
     queryFn: () => program.account.miami_token.all(),
   })
 
-  // Fetch the program account
+  // Query to fetch the program account
   const getProgramAccount = useQuery({
     queryKey: ['get-program-account', { cluster }],
     queryFn: () => connection.getParsedAccountInfo(programId),
   })
 
+  // Mutation to initialize a new miami token program account
   const initialize = useMutation({
     mutationKey: ['miamitoken', 'initialize', { cluster }],
     mutationFn: (keypair: Keypair) =>
@@ -51,32 +53,15 @@ export function useMiamitokenProgram() {
   }
 }
 
-export function useMiamitokenProgramAccount({ account }: { account: PublicKey }) {
+// Hook to query and increment the miami token program account
+export function useMiamiTokenProgramAccount({ account }: { account: PublicKey }) {
   const { cluster } = useCluster()
   const transactionToast = useTransactionToast()
-  const { program, accounts } = useMiamitokenProgram()
+  const { program, accounts } = useMiamiTokenProgram()
 
   const accountQuery = useQuery({
     queryKey: ['miami_token', 'fetch', { cluster, account }],
     queryFn: () => program.account.miami_token.fetch(account),
-  })
-
-  const closeMutation = useMutation({
-    mutationKey: ['miamitoken', 'close', { cluster, account }],
-    mutationFn: () => program.methods.close().accounts({ miamitoken: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accounts.refetch()
-    },
-  })
-
-  const decrementMutation = useMutation({
-    mutationKey: ['miamitoken', 'decrement', { cluster, account }],
-    mutationFn: () => program.methods.decrement().accounts({ miamitoken: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accountQuery.refetch()
-    },
   })
 
   const incrementMutation = useMutation({
@@ -88,20 +73,8 @@ export function useMiamitokenProgramAccount({ account }: { account: PublicKey })
     },
   })
 
-  const setMutation = useMutation({
-    mutationKey: ['miamitoken', 'set', { cluster, account }],
-    mutationFn: (value: number) => program.methods.set(value).accounts({ miamitoken: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accountQuery.refetch()
-    },
-  })
-
   return {
     accountQuery,
-    closeMutation,
-    decrementMutation,
     incrementMutation,
-    setMutation,
   }
 }
