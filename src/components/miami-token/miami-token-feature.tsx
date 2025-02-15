@@ -1,15 +1,15 @@
-'use client'
+"use client";
 
-import { useWallet } from '@solana/wallet-adapter-react'
-import { WalletButton } from '../solana/solana-provider'
-import { AppHero, ellipsify } from '../ui/ui-layout'
-import { ExplorerLink } from '../cluster/cluster-ui'
-import { useMiamitokenProgram } from './miamitoken-data-access'
-import { MiamitokenCreate, MiamitokenList } from './miamitoken-ui'
+import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletButton } from "../solana/solana-provider";
+import { AppHero, ellipsify } from "../ui/ui-layout";
+import { ExplorerLink } from "../cluster/cluster-ui";
+import { useMiamitokenProgram } from "./miami-token-data-access";
+import { MiamitokenCreate, MiamitokenList } from "./miami-token-ui";
 
-export default function MiamitokenFeature() {
-  const { publicKey } = useWallet()
-  const { programId } = useMiamitokenProgram()
+export default function MiamiTokenFeature() {
+  const { publicKey } = useWallet();
+  const { programId } = useMiamitokenProgram();
 
   return publicKey ? (
     <div>
@@ -20,7 +20,10 @@ export default function MiamitokenFeature() {
         }
       >
         <p className="mb-6">
-          <ExplorerLink path={`account/${programId}`} label={ellipsify(programId.toString())} />
+          <ExplorerLink
+            path={`account/${programId}`}
+            label={ellipsify(programId.toString())}
+          />
         </p>
         <MiamitokenCreate />
       </AppHero>
@@ -34,5 +37,5 @@ export default function MiamitokenFeature() {
         </div>
       </div>
     </div>
-  )
+  );
 }
