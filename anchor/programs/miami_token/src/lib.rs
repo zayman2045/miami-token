@@ -2,12 +2,12 @@
 
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    token_2022::{mint_to, MintTo},
     associated_token::AssociatedToken,
+    token_2022::{mint_to, MintTo},
     token_interface::{Mint, TokenAccount, TokenInterface},
 };
 
-declare_id!("F6ca21MY9PkQbtam7VhbRxroHLoVX5Voukmi5ksyhES8");
+declare_id!("EmSvUFba9Fuz8T4wpu9WVF2mvdPjLGWnawnND5i5DeNd");
 
 #[program]
 pub mod miami_token {
