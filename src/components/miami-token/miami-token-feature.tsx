@@ -4,19 +4,19 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletButton } from "../solana/solana-provider";
 import { AppHero, ellipsify } from "../ui/ui-layout";
 import { ExplorerLink } from "../cluster/cluster-ui";
-import { useMiamitokenProgram } from "./miami-token-data-access";
-import { MiamitokenCreate, MiamitokenList } from "./miami-token-ui";
+import { useMiamiTokenProgram } from "./miami-token-data-access";
+import { MiamiTokenCreate, MiamiTokenList } from "./miami-token-ui";
 
 export default function MiamiTokenFeature() {
   const { publicKey } = useWallet();
-  const { programId } = useMiamitokenProgram();
+  const { programId } = useMiamiTokenProgram();
 
   return publicKey ? (
     <div>
       <AppHero
-        title="Miamitoken"
+        title="Miami Token"
         subtitle={
-          'Create a new account by clicking the "Create" button. The state of a account is stored on-chain and can be manipulated by calling the program\'s methods (increment, decrement, set, and close).'
+          'Create a new account by clicking the "Create" button. The state of a account is stored on-chain and can be manipulated by calling the program\'s methods.'
         }
       >
         <p className="mb-6">
@@ -25,9 +25,9 @@ export default function MiamiTokenFeature() {
             label={ellipsify(programId.toString())}
           />
         </p>
-        <MiamitokenCreate />
+        <MiamiTokenCreate />
       </AppHero>
-      <MiamitokenList />
+      <MiamiTokenList />
     </div>
   ) : (
     <div className="max-w-4xl mx-auto">
