@@ -92,5 +92,7 @@ describe("Miami Token", () => {
   //     .rpc({ skipPreflight: false, commitment: "confirmed" });
 
   //   console.log("Airdrop successful: ", tx);
+
+  // Check the user's token balance
   // });
 });
