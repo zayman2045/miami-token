@@ -65,16 +65,22 @@ export function MiamiTokenList() {
 }
 
 function MiamiTokenCard({ account }: { account: PublicKey }) {
-  const { accountQuery, airdropTokensMutation } = useMiamiTokenProgramAccount({
+  const { tokenMintAccountQuery, tokenMintStateAccountQuery, airdropTokensMutation } = useMiamiTokenProgramAccount({
     account,
   });
 
-  const supply = useMemo(
-    () => accountQuery.data?.supply ?? 0,
-    [accountQuery.data?.supply]
+  const mint = useMemo(
+    () => tokenMintStateAccountQuery.data?.mint ?? "",
+    [tokenMintStateAccountQuery.data?.mint]
   ).toString();
 
-  return accountQuery.isLoading ? (
+  // TODO: get the supply from the associated token account
+  const supply = useMemo(
+    () => tokenMintStateAccountQuery.data?.supply ?? 0,
+    [tokenMintStateAccountQuery.data?.supply]
+  ).toString();
+
+  return tokenMintStateAccountQuery.isLoading ? (
     <span className="loading loading-spinner loading-lg"></span>
   ) : (
     <div className="card card-bordered border-base-300 border-4 text-neutral-content">
@@ -82,7 +88,7 @@ function MiamiTokenCard({ account }: { account: PublicKey }) {
         <div className="space-y-6">
           <h2
             className="card-title justify-center text-3xl cursor-pointer"
-            onClick={() => accountQuery.refetch()}
+            onClick={() => tokenMintStateAccountQuery.refetch()}
           >
             {supply}
           </h2>
