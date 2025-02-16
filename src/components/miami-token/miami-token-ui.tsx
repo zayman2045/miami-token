@@ -9,20 +9,22 @@ import {
   useMiamiTokenProgramAccount,
 } from "./miami-token-data-access";
 
+// Button to create a new token mint account
 export function MiamiTokenCreate() {
-  const { initialize } = useMiamiTokenProgram();
+  const { createTokenMint } = useMiamiTokenProgram();
 
   return (
     <button
       className="btn btn-xs lg:btn-md btn-primary"
-      onClick={() => initialize.mutateAsync(Keypair.generate())}
-      disabled={initialize.isPending}
+      onClick={() => createTokenMint.mutateAsync(Keypair.generate())}
+      disabled={createTokenMint.isPending}
     >
-      Create Token Mint {initialize.isPending && "..."}
+      Create Token Mint {createTokenMint.isPending && "..."}
     </button>
   );
 }
 
+// List of all token mint accounts
 export function MiamiTokenList() {
   const { accounts, getProgramAccount } = useMiamiTokenProgram();
 
@@ -63,17 +65,14 @@ export function MiamiTokenList() {
 }
 
 function MiamiTokenCard({ account }: { account: PublicKey }) {
-  const {
-    accountQuery,
-    incrementMutation,
-  } = useMiamiTokenProgramAccount({
+  const { accountQuery, airdropTokensMutation } = useMiamiTokenProgramAccount({
     account,
   });
 
-  const count = useMemo(
-    () => accountQuery.data?.count ?? 0,
-    [accountQuery.data?.count]
-  );
+  const supply = useMemo(
+    () => accountQuery.data?.supply ?? 0,
+    [accountQuery.data?.supply]
+  ).toString();
 
   return accountQuery.isLoading ? (
     <span className="loading loading-spinner loading-lg"></span>
@@ -85,15 +84,15 @@ function MiamiTokenCard({ account }: { account: PublicKey }) {
             className="card-title justify-center text-3xl cursor-pointer"
             onClick={() => accountQuery.refetch()}
           >
-            {count}
+            {supply}
           </h2>
           <div className="card-actions justify-around">
             <button
               className="btn btn-xs lg:btn-md btn-outline"
-              onClick={() => incrementMutation.mutateAsync()}
-              disabled={incrementMutation.isPending}
+              onClick={() => airdropTokensMutation.mutateAsync()}
+              disabled={airdropTokensMutation.isPending}
             >
-              Increment
+              Mint 100 Tokens
             </button>
           </div>
           <div className="text-center space-y-4">
