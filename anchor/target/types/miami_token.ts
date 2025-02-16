@@ -33,6 +33,10 @@ export type MiamiToken = {
         },
         {
           "name": "tokenMint",
+          "writable": true
+        },
+        {
+          "name": "tokenMintState",
           "writable": true,
           "pda": {
             "seeds": [
@@ -42,8 +46,18 @@ export type MiamiToken = {
                   109,
                   105,
                   110,
-                  116
+                  116,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "tokenMint"
               }
             ]
           }
@@ -145,6 +159,11 @@ export type MiamiToken = {
         {
           "name": "tokenMint",
           "writable": true,
+          "signer": true
+        },
+        {
+          "name": "tokenMintState",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -153,8 +172,18 @@ export type MiamiToken = {
                   109,
                   105,
                   110,
-                  116
+                  116,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "tokenMint"
               }
             ]
           }
@@ -168,6 +197,43 @@ export type MiamiToken = {
         }
       ],
       "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "tokenMintState",
+      "discriminator": [
+        16,
+        55,
+        225,
+        211,
+        214,
+        59,
+        249,
+        5
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "tokenMintState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "supply",
+            "type": "u64"
+          },
+          {
+            "name": "isInitialized",
+            "type": "bool"
+          }
+        ]
+      }
     }
   ]
 };
