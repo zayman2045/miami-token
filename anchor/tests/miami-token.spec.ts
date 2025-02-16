@@ -2,7 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { MiamiToken } from "../target/types/miami_token";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from "@solana/spl-token";
 
 describe("Miami Token", () => {
   // Configure the client to use the local cluster.
@@ -13,15 +13,15 @@ describe("Miami Token", () => {
 
   const program = anchor.workspace.MiamiToken as Program<MiamiToken>;
 
-  let tokenMintKeypair: Keypair;
+  let tokenMint: Keypair;
 
   beforeAll(async () => {
     // Create a new keypair for the token mint
-    tokenMintKeypair = anchor.web3.Keypair.generate();
-    console.log("Token Mint Keypair: ", tokenMintKeypair.publicKey.toBase58());
+    tokenMint = anchor.web3.Keypair.generate();
+    console.log("Token Mint Keypair: ", tokenMint.publicKey.toBase58());
   });
 
-// Initialize token mint and token mint state
+  // Initialize token mint and token mint state
   it("Initialize token", async () => {
     // Create the token mint
     const tx = await program.methods
@@ -29,9 +29,9 @@ describe("Miami Token", () => {
       .accounts({
         signer: payer.publicKey,
         tokenProgram: TOKEN_PROGRAM_ID,
-        tokenMint: tokenMintKeypair.publicKey,
+        tokenMint: tokenMint.publicKey,
       })
-      .signers([tokenMintKeypair])
+      .signers([tokenMint])
       .rpc({ skipPreflight: true, commitment: "confirmed" });
 
     console.log("Token mint initialization successful: ", tx);
@@ -39,12 +39,12 @@ describe("Miami Token", () => {
     // Check that the token mint state is mint authority for the token mint account
     const [tokenMintStateAccountAddress] =
       anchor.web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("mint_state"), tokenMintKeypair.publicKey.toBuffer()],
+        [Buffer.from("mint_state"), tokenMint.publicKey.toBuffer()],
         program.programId
       );
 
     const mintAccountInfo = await connection.getParsedAccountInfo(
-      tokenMintKeypair.publicKey
+      tokenMint.publicKey
     );
 
     const parsedInfo = (mintAccountInfo.value?.data as any).parsed?.info;
@@ -57,42 +57,52 @@ describe("Miami Token", () => {
     const tokenMintStateAccount = await program.account.tokenMintState.fetch(
       tokenMintStateAccountAddress
     );
-    expect(tokenMintStateAccount.mint.toBase58()).toBe(tokenMintKeypair.publicKey.toBase58());
+    expect(tokenMintStateAccount.mint.toBase58()).toBe(
+      tokenMint.publicKey.toBase58()
+    );
   });
 
-  // it("Airdrop tokens to user", async () => {
-  //   // Create a user and fund their account with 2 SOL
-  //   const user = Keypair.generate();
+  it("Airdrop tokens to user", async () => {
+    // Create a user and fund their account with 2 SOL
+    const user = Keypair.generate();
 
-  //   const airdropSolSignature = await provider.connection.requestAirdrop(
-  //     user.publicKey,
-  //     2 * LAMPORTS_PER_SOL
-  //   );
+    const solAirdropSolSignature = await provider.connection.requestAirdrop(
+      user.publicKey,
+      2 * LAMPORTS_PER_SOL
+    );
 
-  //   const latestBlockHash = await provider.connection.getLatestBlockhash();
+    // Wait for the SOL airdrop to be confirmed
+    const latestBlockHash = await provider.connection.getLatestBlockhash();
 
-  //   await provider.connection.confirmTransaction(
-  //     {
-  //       blockhash: latestBlockHash.blockhash,
-  //       lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-  //       signature: airdropSolSignature,
-  //     },
-  //     "confirmed"
-  //   );
+    await provider.connection.confirmTransaction(
+      {
+        blockhash: latestBlockHash.blockhash,
+        lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+        signature: solAirdropSolSignature,
+      },
+      "confirmed"
+    );
 
-  //   const airdropAmount = new anchor.BN(100);
+    // Airdrop SPL tokens to the user
+    const tokenAirdropAmount = new anchor.BN(100);
 
-  //   const tx = await program.methods
-  //     .airdropTokens(airdropAmount)
-  //     .accounts({
-  //       user: user.publicKey,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //     })
-  //     .signers([user])
-  //     .rpc({ skipPreflight: false, commitment: "confirmed" });
+    const tx = await program.methods
+      .airdropTokens(tokenAirdropAmount)
+      .accounts({
+        user: user.publicKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenMint: tokenMint.publicKey,
+      })
+      .signers([user])
+      .rpc({ skipPreflight: true, commitment: "confirmed" });
 
-  //   console.log("Airdrop successful: ", tx);
+    console.log("Airdrop successful: ", tx);
 
-  // Check the user's token balance
-  // });
+    // Check the user's token balance
+    const associatedTokenAccount = await getAssociatedTokenAddress(
+      tokenMint.publicKey,
+      user.publicKey
+    );
+    // todo
+  });
 });
