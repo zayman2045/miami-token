@@ -13,16 +13,21 @@ declare_id!("EmSvUFba9Fuz8T4wpu9WVF2mvdPjLGWnawnND5i5DeNd");
 pub mod miami_token {
     use super::*;
 
-    pub fn create_token_mint(ctx: Context<CreateMintAccount>) -> Result<()> {
+    pub fn create_token_mint(ctx: Context<CreateTokenMint>) -> Result<()> {
+        let token_mint_state = &mut ctx.accounts.token_mint_state;
+        token_mint_state.mint = ctx.accounts.token_mint.key();
+        token_mint_state.supply = 0;
+        token_mint_state.is_initialized = true;
+
         msg!(
             "Token mint created successfully! The mint address is: {}",
-            ctx.accounts.token_mint.key()
+            token_mint_state.mint
         );
         Ok(())
     }
 
     pub fn airdrop_tokens(ctx: Context<AirdropTokens>, amount: u64) -> Result<()> {
-        let signer_seeds: &[&[&[u8]]] = &[&[b"mint", &[ctx.bumps.token_mint]]];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_state", &[ctx.bumps.token_mint_state]]];
 
         // Accounts required to make the mint_to CPI call
         let cpi_accounts = MintTo {
@@ -47,18 +52,18 @@ pub mod miami_token {
 }
 
 #[derive(Accounts)]
-pub struct CreateMintAccount<'info> {
+pub struct CreateTokenMint<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(
-      init_if_needed,
+      init,
       payer = signer,
-      mint::authority = token_mint,
+      mint::authority = token_mint_state,
       mint::decimals = 9,
-      seeds = [b"mint"],
-      bump
     )]
     pub token_mint: InterfaceAccount<'info, Mint>,
+    #[account(init, payer = signer, space = 8 + TokenMintState::INIT_SPACE, seeds = [b"mint_state", token_mint.key().as_ref()], bump)]
+    pub token_mint_state: Account<'info, TokenMintState>,
     pub system_program: Program<'info, System>,
     pub token_program: Interface<'info, TokenInterface>,
 }
@@ -67,8 +72,10 @@ pub struct CreateMintAccount<'info> {
 pub struct AirdropTokens<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
-    #[account(mut, seeds = [b"mint"], bump)]
+    #[account(mut)]
     pub token_mint: InterfaceAccount<'info, Mint>,
+    #[account(mut, seeds = [b"mint_state", token_mint.key().as_ref()], bump)]
+    pub token_mint_state: Account<'info, TokenMintState>,
     #[account(
     init_if_needed,
     payer = user,
@@ -80,4 +87,12 @@ pub struct AirdropTokens<'info> {
     pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
     pub associated_token_program: Program<'info, AssociatedToken>,
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct TokenMintState {
+    pub mint: Pubkey,
+    pub supply: u64,
+    pub is_initialized: bool,
 }
