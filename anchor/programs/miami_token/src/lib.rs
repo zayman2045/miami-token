@@ -13,27 +13,39 @@ declare_id!("EmSvUFba9Fuz8T4wpu9WVF2mvdPjLGWnawnND5i5DeNd");
 pub mod miami_token {
     use super::*;
 
+    // Create a new token mint
     pub fn create_token_mint(ctx: Context<CreateTokenMint>) -> Result<()> {
         let token_mint_state = &mut ctx.accounts.token_mint_state;
         token_mint_state.mint = ctx.accounts.token_mint.key();
         token_mint_state.supply = 0;
         token_mint_state.is_initialized = true;
 
+        msg!("Token mint created successfully!");
+        msg!("Token mint address: {}", ctx.accounts.token_mint.key());
         msg!(
-            "Token mint created successfully! The mint address is: {}",
-            token_mint_state.mint
+            "Token mint state address: {}",
+            ctx.accounts.token_mint_state.key()
         );
+
         Ok(())
     }
 
+    // Airdrop tokens to the user's associated token account
     pub fn airdrop_tokens(ctx: Context<AirdropTokens>, amount: u64) -> Result<()> {
-        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_state", &[ctx.bumps.token_mint_state]]];
+        let token_mint_key = ctx.accounts.token_mint.key();
+
+        // Define the signer seeds for the token mint state PDA
+        let signer_seeds: &[&[&[u8]]] = &[&[
+            b"mint_state",
+            &token_mint_key.to_bytes(),
+            &[ctx.bumps.token_mint_state],
+        ]];
 
         // Accounts required to make the mint_to CPI call
         let cpi_accounts = MintTo {
             mint: ctx.accounts.token_mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
-            authority: ctx.accounts.token_mint.to_account_info(),
+            authority: ctx.accounts.token_mint_state.to_account_info(),
         };
 
         let cpi_program = ctx.accounts.token_program.to_account_info();
@@ -42,8 +54,12 @@ pub mod miami_token {
 
         mint_to(cpi_ctx, amount)?;
 
+        // Update the token mint state supply
+        let token_mint_state = &mut ctx.accounts.token_mint_state;
+        token_mint_state.supply += amount;
+
         msg!(
-            "Airdropped {} tokens to {}",
+            "Airdropped {} tokens to user {}",
             amount,
             ctx.accounts.user.key()
         );
