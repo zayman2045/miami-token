@@ -45,14 +45,14 @@ export function useMiamiTokenProgram() {
   // Mutation to create a new miami token mint account
   const createTokenMint = useMutation({
     mutationKey: ["miami_token", "create_token_mint", { cluster }],
-    mutationFn: (keypair: Keypair) =>
+    mutationFn: (tokenMint: Keypair) =>
       program.methods
         .createTokenMint()
         .accounts({
-          tokenMint: keypair.publicKey,
+          tokenMint: tokenMint.publicKey,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
-        .signers([keypair])
+        .signers([tokenMint])
         .rpc(),
     onSuccess: (signature) => {
       transactionToast(signature);
