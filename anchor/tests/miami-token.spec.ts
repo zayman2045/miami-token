@@ -99,16 +99,16 @@ describe("Miami Token", () => {
     console.log("Airdrop successful: ", tx);
 
     // Check the user's token balance
-    const associatedTokenAccount = await getAssociatedTokenAddress(
+    const associatedTokenAccountAddress = await getAssociatedTokenAddress(
       tokenMint.publicKey,
       user.publicKey
     );
     
-    const userTokenAccountInfo = await connection.getParsedAccountInfo(
-      associatedTokenAccount
+    const associatedTokenAccountInfo = await connection.getParsedAccountInfo(
+      associatedTokenAccountAddress
     );
 
-    const tokenAmount = (userTokenAccountInfo.value?.data as any).parsed.info.tokenAmount.amount;
+    const tokenAmount = (associatedTokenAccountInfo.value?.data as any).parsed.info.tokenAmount.amount;
 
     expect(tokenAmount.toString()).toBe(
       tokenAirdropAmount.toString()
