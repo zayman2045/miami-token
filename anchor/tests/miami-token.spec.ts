@@ -47,7 +47,7 @@ describe("Miami Token", () => {
       tokenMint.publicKey
     );
 
-    const parsedInfo = (mintAccountInfo.value?.data as any).parsed?.info;
+    const parsedInfo = (mintAccountInfo.value?.data as any).parsed.info;
 
     expect(parsedInfo.mintAuthority as string).toBe(
       tokenMintStateAccountAddress.toBase58()
@@ -103,6 +103,16 @@ describe("Miami Token", () => {
       tokenMint.publicKey,
       user.publicKey
     );
-    // todo
+    
+    const userTokenAccountInfo = await connection.getParsedAccountInfo(
+      associatedTokenAccount
+    );
+
+    const tokenAmount = (userTokenAccountInfo.value?.data as any).parsed.info.tokenAmount.amount;
+
+    expect(tokenAmount.toString()).toBe(
+      tokenAirdropAmount.toString()
+    );
+
   });
 });
