@@ -3,15 +3,21 @@
 
 import { getMiamiTokenProgram, getMiamiTokenProgramId } from "@project/anchor";
 import { useConnection } from "@solana/wallet-adapter-react";
-import { Cluster, Keypair, PublicKey } from "@solana/web3.js";
+import {
+  Cluster,
+  Keypair,
+  ParsedAccountData,
+  PublicKey,
+} from "@solana/web3.js";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import toast from "react-hot-toast";
 import { useCluster } from "../cluster/cluster-data-access";
 import { useAnchorProvider } from "../solana/solana-provider";
 import { useTransactionToast } from "../ui/ui-layout";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { BN } from "@coral-xyz/anchor";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 // Hook to query and initialize the miami token program
 export function useMiamiTokenProgram() {
@@ -31,7 +37,7 @@ export function useMiamiTokenProgram() {
   );
 
   // Query to fetch all miami token program accounts
-  const accounts = useQuery({
+  const programAccounts = useQuery({
     queryKey: ["miami_token", "all", { cluster }],
     queryFn: () => program.account.tokenMintState.all(),
   });
@@ -56,7 +62,7 @@ export function useMiamiTokenProgram() {
         .rpc(),
     onSuccess: (signature) => {
       transactionToast(signature);
-      return accounts.refetch();
+      return programAccounts.refetch();
     },
     onError: () => toast.error("Failed to create token mint"),
   });
@@ -64,61 +70,73 @@ export function useMiamiTokenProgram() {
   return {
     program,
     programId,
-    accounts,
+    programAccounts,
     getProgramAccount,
     createTokenMint,
   };
 }
 
-// Hook to query and increment the miami token program account
+// Hook to query and  the miami token program account
 export function useMiamiTokenProgramAccount({
-  account,
+  programAccount,
 }: {
-  account: PublicKey;
+  programAccount: PublicKey;
 }) {
   const { connection } = useConnection();
   const { cluster } = useCluster();
   const transactionToast = useTransactionToast();
-  const { program, accounts } = useMiamiTokenProgram();
+  const { program } = useMiamiTokenProgram();
 
   // Query to fetch the token mint state account
   const tokenMintStateAccountQuery = useQuery({
-    queryKey: ["miami_token_state", "fetch", { cluster, account }],
-    queryFn: () => program.account.tokenMintState.fetch(account),
+    queryKey: ["miami_token_state", "fetch", { cluster, programAccount }],
+    queryFn: () => program.account.tokenMintState.fetch(programAccount),
   });
 
-  // Query to fetch the token mint account
-  const tokenMintAccountQuery = useQuery({
-    queryKey: ["miami_token_mint", "fetch", { cluster, account }],
-    queryFn: () => connection.getParsedAccountInfo(account) // todo: pass in mint account address
+  const mintAccount = tokenMintStateAccountQuery.data?.mint!;
+  const userAddress = useWallet().publicKey!;
+
+  // Query to fetch the associated token account
+  const associatedTokenAccountBalanceQuery = useQuery({
+    queryKey: ["associated_token", "fetch", { cluster, programAccount }],
+    queryFn: async () => {
+      const associatedTokenAddress = await getAssociatedTokenAddress(
+        mintAccount,
+        userAddress
+      );
+      let accountInfo = await connection.getParsedAccountInfo(
+        associatedTokenAddress
+      );
+      let parsedAccountData = accountInfo.value?.data as ParsedAccountData;
+      return [associatedTokenAddress.toBase58(), parsedAccountData?.parsed?.info?.tokenAmount?.amount || 0];
+    },
+    enabled: !!mintAccount && !!userAddress,
   });
 
-  //TODO:  Query to fetch the associated token account
-  // const associatedTokenAccountQuery = useQuery({
-  //   queryKey: ["miami_token_associated_token", "fetch", { cluster, account }],
-  //   queryFn: () => connection.getParsedAccountInfo(account),
-  // });
+  // Query to fetch the 
 
   // Mutation to airdrop tokens to the user
   const airdropTokensMutation = useMutation({
-    mutationKey: ["miami_token", "airdrop_tokens", { cluster, account }],
+    mutationKey: ["miami_token", "airdrop_tokens", { cluster, programAccount }],
     mutationFn: () =>
       program.methods
-        .airdropTokens(new BN(100)) 
+        .airdropTokens(new BN(100))
         .accounts({
-          tokenMint: account,
+          tokenMint: mintAccount,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
         .rpc(),
     onSuccess: (tx) => {
       transactionToast(tx);
-      return tokenMintStateAccountQuery.refetch();
+      associatedTokenAccountBalanceQuery.refetch();
+      tokenMintStateAccountQuery.refetch();
     },
   });
 
   return {
-    tokenMintAccountQuery,
     tokenMintStateAccountQuery,
     airdropTokensMutation,
+    mintAccount,
+    associatedTokenAccountBalanceQuery,
   };
 }
