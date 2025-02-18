@@ -26,7 +26,7 @@ export function MiamiTokenCreate() {
 
 // List of all token mint accounts
 export function MiamiTokenList() {
-  const { accounts, getProgramAccount } = useMiamiTokenProgram();
+  const { programAccounts, getProgramAccount } = useMiamiTokenProgram();
 
   if (getProgramAccount.isLoading) {
     return <span className="loading loading-spinner loading-lg"></span>;
@@ -43,14 +43,14 @@ export function MiamiTokenList() {
   }
   return (
     <div className={"space-y-6"}>
-      {accounts.isLoading ? (
+      {programAccounts.isLoading ? (
         <span className="loading loading-spinner loading-lg"></span>
-      ) : accounts.data?.length ? (
+      ) : programAccounts.data?.length ? (
         <div className="grid md:grid-cols-2 gap-4">
-          {accounts.data?.map((account) => (
+          {programAccounts.data?.map((programAccount) => (
             <MiamiTokenCard
-              key={account.publicKey.toString()}
-              account={account.publicKey}
+              key={programAccount.publicKey.toString()}
+              programAccount={programAccount.publicKey}
             />
           ))}
         </div>
@@ -64,21 +64,27 @@ export function MiamiTokenList() {
   );
 }
 
-function MiamiTokenCard({ account }: { account: PublicKey }) {
-  const { tokenMintAccountQuery, tokenMintStateAccountQuery, airdropTokensMutation } = useMiamiTokenProgramAccount({
-    account,
+function MiamiTokenCard({ programAccount }: { programAccount: PublicKey }) {
+  const {
+    tokenMintStateAccountQuery,
+    airdropTokensMutation,
+    mintAccount,
+    associatedTokenAccountBalanceQuery,
+  } = useMiamiTokenProgramAccount({
+    programAccount,
   });
 
-  const mint = useMemo(
-    () => tokenMintStateAccountQuery.data?.mint ?? "",
-    [tokenMintStateAccountQuery.data?.mint]
-  ).toString();
-
-  // TODO: get the supply from the associated token account
-  const supply = useMemo(
+  // Get the token supply from the token mint state account
+  const tokenSupply = useMemo(
     () => tokenMintStateAccountQuery.data?.supply ?? 0,
     [tokenMintStateAccountQuery.data?.supply]
   ).toString();
+
+  // Get the token account balance from the associated token account
+  const [tokenAccountAddress, tokenAccountBalance] = useMemo(
+    () => associatedTokenAccountBalanceQuery.data ?? ["Uninitialized", "0"],
+    [associatedTokenAccountBalanceQuery.data]
+  );
 
   return tokenMintStateAccountQuery.isLoading ? (
     <span className="loading loading-spinner loading-lg"></span>
@@ -89,9 +95,11 @@ function MiamiTokenCard({ account }: { account: PublicKey }) {
           <h2
             className="card-title justify-center text-3xl cursor-pointer"
             onClick={() => tokenMintStateAccountQuery.refetch()}
-          >
-            {supply}
-          </h2>
+          ></h2>
+          <div>
+            <p>Token Supply: {tokenSupply}</p>
+            <p>My Balance: {tokenAccountBalance}</p>
+          </div>
           <div className="card-actions justify-around">
             <button
               className="btn btn-xs lg:btn-md btn-outline"
@@ -103,9 +111,24 @@ function MiamiTokenCard({ account }: { account: PublicKey }) {
           </div>
           <div className="text-center space-y-4">
             <p>
+              Program:
               <ExplorerLink
-                path={`account/${account}`}
-                label={ellipsify(account.toString())}
+                path={`account/${programAccount}`}
+                label={ellipsify(programAccount.toString())}
+              />
+            </p>
+            <p>
+              Mint:{" "}
+              <ExplorerLink
+                path={`account/${mintAccount}`}
+                label={ellipsify(mintAccount.toString())}
+              />
+            </p>
+            <p>
+              Token Account:{" "}
+              <ExplorerLink
+                path={`account/${tokenAccountAddress}`}
+                label={ellipsify(tokenAccountAddress)}
               />
             </p>
           </div>
